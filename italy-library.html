@@ -104,12 +104,30 @@ function drawMap(){
   for(const o of OUTLINES){
     s += '<polygon class="land" points="'+o.map(p=>PX(p).map(v=>v.toFixed(1)).join(",")).join(" ")+'"/>';
   }
+  // spread dots that sit nearly on top of each other (e.g. Salerno/Cetara)
+  const pos = dots.map(n=>PX([n.lon,n.lat]));
+  for(let it=0; it<30; it++){
+    let moved=false;
+    for(let i=0;i<pos.length;i++) for(let j=i+1;j<pos.length;j++){
+      let dx=pos[j][0]-pos[i][0], dy=pos[j][1]-pos[i][1];
+      let d=Math.hypot(dx,dy);
+      if(d<15){
+        if(d<0.1){dx=1;dy=0;d=1;}
+        const push=(15-d)/2/d;
+        pos[i][0]-=dx*push; pos[i][1]-=dy*push;
+        pos[j][0]+=dx*push; pos[j][1]+=dy*push;
+        moved=true;
+      }
+    }
+    if(!moved) break;
+  }
+  dots.forEach((n,i)=>{n._x=pos[i][0]; n._y=pos[i][1];});
   // place labels greedily, avoiding overlap; distant placements get a leader line
-  const boxes = dots.map(n=>{const [x,y]=PX([n.lon,n.lat]);return {x:x-7,y:y-7,w:14,h:14};});
+  const boxes = dots.map(n=>({x:n._x-7,y:n._y-7,w:14,h:14}));
   const hit=(a)=>boxes.some(b=>a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y);
   let lbl = "", circ = "";
   for(const n of dots){
-    const [x,y] = PX([n.lon,n.lat]);
+    const x = n._x, y = n._y;
     const cls = n.tax===true?"yes":(n.tax===false?"no":"na");
     circ += '<circle class="dot '+cls+'" cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="6" onclick="openNote(\''+n.slug+'\')"><title>'+n.short+'</title></circle>';
     const w = n.short.length*4.8+4, h = 10;
