@@ -177,7 +177,8 @@ function setMap(on){
 document.getElementById("mapbtn").onclick = ()=>setMap(!mapMode);
 document.querySelectorAll(".chip:not(.view)").forEach(c=>c.onclick=()=>{
   document.querySelectorAll(".chip:not(.view)").forEach(x=>x.classList.remove("on"));
-  c.classList.add("on"); filter=c.dataset.f; render();});
+  c.classList.add("on"); filter=c.dataset.f;
+  if(mapMode&&(filter==="guide"||filter==="thread")) setMap(false); else render();});
 document.getElementById("q").oninput = render;
 render();
 </script></body></html>
